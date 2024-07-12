@@ -1,0 +1,1006 @@
+
+
+ARQUIVO DO CÓDIGO DO PROJETO TODO POR PRECAUÇÃO, CASO NECESSITE COLOCAR NO REPLIT TAMBÉM (BY ANNAJ)
+
+CLASSE USUARIO 
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class Usuario {
+    /*Atributos; A classe usuario é uma classe base para as classes "Motorista" e "Passageiro" que herdam seus atributos*/
+    private String nome;
+    private String username;
+    private String email;
+    private String telefone;
+    private String endereco;
+    private String senha;
+    /* Apesar de ter outras formas de tratar isso, trabalhar com boolean tem mais nexo do que com String. Então, deixem assim.*/
+    private boolean motorista; 
+    private boolean passageiro;
+    private static List<Usuario> usuarios = new ArrayList<>();
+
+    /*Construtor */
+    public Usuario(String nome, String email, String telefone, String endereco, String senha, boolean motorista, boolean passageiro) {
+        this.nome = nome;
+        this.username = generateRandomUsername();  
+        this.email = email;
+        this.telefone = telefone;
+        this.endereco = endereco;
+        this.senha = senha;
+        this.motorista = motorista;
+        this.passageiro = passageiro;
+        usuarios.add(this);
+    }
+
+    public static void adicionarUsuario(Usuario usuario) {
+        if (usuario != null && !usuarios.contains(usuario)) {
+            usuarios.add(usuario);
+        }
+    }
+    /*getters e setters */
+    public static List<Usuario> getUsuarios() {
+        return usuarios;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public boolean isMotorista() {
+        return motorista;
+    }
+
+    public boolean isPassageiro() {
+        return passageiro;
+    }
+    /* Há comunicação entre ArrayLists. Demorou, mas funcionou by Anna */
+    public static List<Usuario> getMotoristas() {
+        List<Usuario> motoristas = new ArrayList<>();
+        for (Usuario usuario : usuarios) {
+            if (usuario.isMotorista()) {
+                motoristas.add(usuario);
+            }
+        }
+        return motoristas;
+    }
+
+    public static List<Usuario> getPassageiros() {
+        List<Usuario> passageiros = new ArrayList<>();
+        for (Usuario usuario : usuarios) {
+            if (usuario.isPassageiro()) {
+                passageiros.add(usuario);
+            }
+        }
+        return passageiros;
+    }
+
+    public static boolean validarLogin(String username, String senha) {
+        for (Usuario usuario : usuarios) {
+            if (usuario.username.equals(username) && usuario.senha.equals(senha)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /*Criação de username deixa de ser uma responsabilidade do usuário externo inserir por Scanner 
+    e passa a ser gerado automaticamente. */
+    private String generateRandomUsername() {
+        String caracteresValidos = "abcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(8); /*gera username de 8 caracteres */
+        for (int i = 0; i < 8; i++) {
+            int indiceAleatorio = random.nextInt(caracteresValidos.length());
+            sb.append(caracteresValidos.charAt(indiceAleatorio));
+        }
+        return sb.toString();
+    }
+}
+
+CLASSE MOTORISTA 
+import java.util.ArrayList;
+import java.util.Scanner; // Adicione esta linha
+
+public class Motorista extends Usuario {
+    private ArrayList<Viagem> minhasViagens; /*Herdando a SuperClasse Usuário com extends */
+
+    public Motorista(String nome, String email, String telefone, String endereco, String senha) {
+        super(nome, email, telefone, endereco, senha, true, false);
+        this.minhasViagens = new ArrayList<>();
+    }
+
+    public ArrayList<Viagem> getMinhasViagens() {
+        return minhasViagens;
+    }
+
+    public void menuMotorista(Scanner entrada) {
+        boolean sair = false;
+        while (!sair) {
+            System.out.println("\n** Menu Motorista ** ");
+            System.out.println(" [ 1 ] Cadastrar viagem ");
+            System.out.println(" [ 2 ] Visualizar minhas viagens ");
+            System.out.println(" [ 3 ] Gerenciar viagens ");
+            System.out.println(" [ 4 ] Sair. ");
+
+            System.out.print(" Digite a sua opção: ");
+            int opcao = entrada.nextInt();
+            switch (opcao) {
+                case 1:
+                    cadastrarViagem(entrada);
+                    break;
+                case 2:
+                    visualizarMinhasViagens();
+                    break;
+                case 3:
+                    gerenciarViagens(entrada);
+                    break;
+                case 4:
+                    System.out.println("\nSaindo...");
+                    sair = true;
+                    break;
+                default:
+                    System.out.println("Digite uma opção válida, de 1 a 4.");
+            }
+        }
+    }
+
+    private void cadastrarViagem(Scanner entrada) {
+        entrada.nextLine(); // Consumir nova linha pendente
+
+        System.out.print("Digite o local de origem: ");
+        String origem = entrada.nextLine();
+
+        System.out.print("Digite o local de destino: ");
+        String destino = entrada.nextLine();
+
+        ArrayList<String> rota = new ArrayList<>();
+        System.out.println("Digite as paradas da rota (digite 'fim' para terminar): ");
+        while (true) {
+            String parada = entrada.nextLine();
+            if (parada.equalsIgnoreCase("fim")) {
+                break;
+            }
+            rota.add(parada);
+        }
+
+        System.out.print("Digite o número de vagas disponíveis: ");
+        int vagasDisponiveis = entrada.nextInt();
+
+        Local local = new Local(origem, destino, rota);
+        Viagem viagem = Viagem.criarViagem(local, this, vagasDisponiveis);
+        minhasViagens.add(viagem);
+        Passageiro.adicionarViagemDisponivel(viagem);
+
+        System.out.println("Viagem cadastrada com sucesso!");
+    }
+
+    private void visualizarMinhasViagens() {
+        if (minhasViagens.isEmpty()) {
+            System.out.println("Você não tem viagens cadastradas.");
+            return;
+        }
+
+        System.out.println("\nMinhas viagens:");
+        for (Viagem viagem : minhasViagens) {
+            System.out.println(viagem);
+        }
+    }
+
+    private void gerenciarViagens(Scanner entrada) {
+        if (minhasViagens.isEmpty()) {
+            System.out.println("Você não tem viagens para gerenciar.");
+            return;
+        }
+
+        System.out.println("\nGerenciar minhas viagens:");
+        for (int i = 0; i < minhasViagens.size(); i++) {
+            System.out.println("[" + (i + 1) + "] " + minhasViagens.get(i));
+        }
+
+        System.out.print("Escolha o número da viagem para gerenciar: ");
+        int escolha = lerEscolha(entrada, 1, minhasViagens.size());
+        Viagem viagemSelecionada = minhasViagens.get(escolha - 1);
+        boolean gerenciar = true;
+        while (gerenciar) {
+            System.out.println("\n** Gerenciar Viagem " + viagemSelecionada.getId() + " **");
+            System.out.println(" [ 1 ] Visualizar paradas ");
+            System.out.println(" [ 2 ] Confirmar parada ");
+            System.out.println(" [ 3 ] Concluir viagem ");
+            System.out.println(" [ 4 ] Voltar ");
+
+            System.out.print("Digite a sua opção: ");
+            int opcao = entrada.nextInt();
+            switch (opcao) {
+                case 1:
+                    visualizarParadas(viagemSelecionada);
+                    break;
+                case 2:
+                    confirmarParada(entrada, viagemSelecionada);
+                    break;
+                case 3:
+                    concluirViagem(viagemSelecionada);
+                    gerenciar = false;
+                    break;
+                case 4:
+                    gerenciar = false;
+                    break;
+                default:
+                    System.out.println("Digite uma opção válida, de 1 a 4.");
+            }
+        }
+    }
+
+    private void visualizarParadas(Viagem viagem) {
+        System.out.println("Paradas da viagem " + viagem.getId() + ": " + viagem.getLocal().getRota());
+    }
+
+    private void confirmarParada(Scanner entrada, Viagem viagem) {
+        System.out.print("Digite o local da parada a confirmar: ");
+        entrada.nextLine(); // Consumir nova linha pendente
+        String parada = entrada.nextLine();
+
+        if (viagem.getLocal().getRota().contains(parada)) {
+            int subindo = 0;
+            int descendo = 0;
+            ArrayList<Passageiro> passageirosParaDescer = new ArrayList<>();
+            for (Passageiro passageiro : viagem.getPassageiros()) {
+                if (parada.equals(passageiro.getLocalDestino())) {
+                    descendo++;
+                    passageirosParaDescer.add(passageiro);
+                }
+            }
+            for (Passageiro passageiro : passageirosParaDescer) {
+                viagem.liberarVaga(passageiro);
+                passageiro.confirmarDesembarque();
+            }
+            System.out.println("Parada confirmada: " + parada + ". Subindo: " + subindo + ", Descendo: " + descendo);
+        } else {
+            System.out.println("Parada inválida.");
+        }
+    }
+
+    private void concluirViagem(Viagem viagem) {
+        viagem.concluirViagem();
+        minhasViagens.remove(viagem);
+        System.out.println("Viagem concluída: " + viagem.getId());
+        for (Passageiro passageiro : viagem.getPassageiros()) {
+            passageiro.avaliarViagem(new Scanner(System.in), viagem);
+        }
+        avaliarViagem(viagem);
+    }
+
+    private void avaliarViagem(Viagem viagem) {
+        Scanner entrada = new Scanner(System.in);
+        System.out.print("Digite sua avaliação para a viagem (1-5): ");
+        int avaliacao = lerEscolha(entrada, 1, 5);
+        entrada.nextLine(); // Consumir nova linha
+        System.out.print("Digite seu comentário (opcional): ");
+        String comentario = entrada.nextLine();
+        Avaliacao.criarAvaliacao(viagem.getId(), this.getNome(), avaliacao, comentario);
+        System.out.println("Você avaliou a viagem " + viagem.getId() + " com " + avaliacao + " estrelas.");
+    }
+
+    private int lerEscolha(Scanner entrada, int min, int max) {
+        int valor;
+        while (true) {
+            valor = entrada.nextInt();
+            if (valor >= min && valor <= max) {
+                break;
+            } else {
+                System.out.println("Por favor, digite um número entre " + min + " e " + max + ".");
+            }
+        }
+        return valor;
+    }
+}
+
+CLASSE PASSAGEIRO
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Passageiro extends Usuario {
+    /*Atributos: Lista de Minhas viagens; de Viagens Disponiveis  */
+    private ArrayList<Viagem> minhasViagens;
+    private static ArrayList<Viagem> viagensDisponiveis = new ArrayList<>();
+    private String localDestino;
+
+    public Passageiro(String nome, String email, String telefone, String endereco, String senha) {
+        super(nome, email, telefone, endereco, senha, false, true);
+        this.minhasViagens = new ArrayList<>();
+    }
+
+    public static void adicionarViagemDisponivel(Viagem viagem) {
+        viagensDisponiveis.add(viagem);
+    }
+
+    public static ArrayList<Viagem> getViagensDisponiveis() {
+        return viagensDisponiveis;
+    }
+
+    public String getLocalDestino() {
+        return localDestino;
+    }
+
+    public void setLocalDestino(String localDestino) {
+        this.localDestino = localDestino;
+    }
+
+    public void confirmarDesembarque() {
+        System.out.println("Passageiro " + getNome() + " desembarcou com sucesso.");
+    }
+
+    public void menuPassageiro(Scanner entrada) {
+        boolean sair = false;
+        while (!sair) {
+            System.out.println("\n** Menu Passageiro ** ");
+            System.out.println(" [ 1 ] Buscar caronas ");
+            System.out.println(" [ 2 ] Confirmar descida "); /*Mudança de "Carona" p/ "descida" para evitar confusão ao usuário.*/
+            System.out.println(" [ 3 ] Avaliar uma viagem ");
+            System.out.println(" [ 4 ] Visualizar avaliações ");
+            System.out.println(" [ 5 ] Sair. ");
+
+            System.out.print(" Digite a sua opção: ");
+            int opcao = lerInteiro(entrada);
+            switch (opcao) {
+                case 1:
+                    buscarCaronas(entrada);
+                    break;
+                case 2:
+                    confirmarCarona(entrada);
+                    break;
+                case 3:
+                    avaliarViagemMenu(entrada);
+                    break;
+                case 4:
+                    Avaliacao.visualizarAvaliacoes();
+                    break;
+                case 5:
+                    System.out.println("\nSaindo...");
+                    sair = true;
+                    break;
+                default:
+                    System.out.println("Digite uma opção válida, de 1 a 5.");
+            }
+        }
+    }
+
+    private void buscarCaronas(Scanner entrada) {
+        entrada.nextLine(); // Consumir nova linha pendente
+        System.out.print("Digite a localização de partida desejada: ");
+        String partidaDesejada = entrada.nextLine();
+        System.out.print("Digite a localização de destino desejada: ");
+        String destinoDesejado = entrada.nextLine();
+
+        ArrayList<Viagem> viagensEncontradas = Viagem.buscarViagensDisponiveis(partidaDesejada, destinoDesejado);
+
+        if (!viagensEncontradas.isEmpty()) {
+            exibirViagensEncontradas(viagensEncontradas);
+            int escolha = lerEscolhaViagem(entrada, viagensEncontradas.size());
+            if (escolha > 0 && escolha <= viagensEncontradas.size()) {
+                Viagem viagemSelecionada = viagensEncontradas.get(escolha - 1);
+                if (viagemSelecionada.solicitarVaga(this)) {
+                    this.localDestino = destinoDesejado;
+                    minhasViagens.add(viagemSelecionada);
+                    System.out.println("Vaga solicitada com sucesso na viagem: " + viagemSelecionada.getId());
+                    viagemSelecionada.notificarMotoristaSobreNovaParada(partidaDesejada, destinoDesejado, 1, 0);
+                } else {
+                    System.out.println("A viagem selecionada está lotada.");
+                }
+            } else {
+                System.out.println("Escolha inválida.");
+            }
+        } else {
+            System.out.println("Nenhuma viagem encontrada para os locais desejados.");
+        }
+    }
+
+    private void exibirViagensEncontradas(ArrayList<Viagem> viagensEncontradas) {
+        System.out.println("\nViagens encontradas:");
+        for (int i = 0; i < viagensEncontradas.size(); i++) {
+            System.out.println("[" + (i + 1) + "] " + viagensEncontradas.get(i));
+        }
+    }
+
+    private int lerEscolhaViagem(Scanner entrada, int tamanhoLista) {
+        System.out.print("Escolha o número da viagem desejada: ");
+        return lerInteiro(entrada, 1, tamanhoLista);
+    }
+
+    private void confirmarCarona(Scanner entrada) {
+        if (minhasViagens.isEmpty()) {
+            System.out.println("Você não tem caronas para confirmar.");
+            return;
+        }
+
+        System.out.println("\nMinhas caronas pendentes de confirmação:");
+        exibirMinhasViagens(minhasViagens);
+
+        int escolha = lerEscolhaViagem(entrada, minhasViagens.size());
+        if (escolha > 0 && escolha <= minhasViagens.size()) {
+            Viagem viagemConfirmada = minhasViagens.get(escolha - 1);
+            confirmarCaronaViagem(viagemConfirmada);
+        } else {
+            System.out.println("Escolha inválida.");
+        }
+    }
+
+    private void exibirMinhasViagens(ArrayList<Viagem> minhasViagens) {
+        for (int i = 0; i < minhasViagens.size(); i++) {
+            System.out.println("[" + (i + 1) + "] " + minhasViagens.get(i));
+        }
+    }
+
+    private void confirmarCaronaViagem(Viagem viagemConfirmada) {
+        System.out.println("Carona confirmada para a viagem: " + viagemConfirmada.getId());
+    }
+
+    private void avaliarViagemMenu(Scanner entrada) {
+        if (minhasViagens.isEmpty()) {
+            System.out.println("Você não tem viagens para avaliar.");
+            return;
+        }
+
+        System.out.println("\nMinhas viagens:");
+        exibirMinhasViagens(minhasViagens);
+
+        int escolha = lerEscolhaViagem(entrada, minhasViagens.size());
+        if (escolha > 0 && escolha <= minhasViagens.size()) {
+            Viagem viagemParaAvaliar = minhasViagens.get(escolha - 1);
+            avaliarViagem(entrada, viagemParaAvaliar);
+        } else {
+            System.out.println("Escolha inválida.");
+        }
+    }
+
+    public void avaliarViagem(Scanner entrada, Viagem viagemParaAvaliar) {
+        System.out.print("Digite sua avaliação (1-5): ");
+        int avaliacao = lerInteiro(entrada, 1, 5);
+        entrada.nextLine(); // Consumir nova linha
+        System.out.print("Digite seu comentário (opcional): ");
+        String comentario = entrada.nextLine();
+        Avaliacao.criarAvaliacao(viagemParaAvaliar.getId(), this.getNome(), avaliacao, comentario);
+        System.out.println("Você avaliou a viagem " + viagemParaAvaliar.getId() + " com " + avaliacao + " estrelas.");
+        minhasViagens.remove(viagemParaAvaliar); // Remove a viagem da lista de viagens do passageiro após a avaliação
+    }
+
+    private int lerInteiro(Scanner entrada) {
+        while (!entrada.hasNextInt()) {
+            System.out.println("Entrada inválida. Por favor, digite um número inteiro.");
+            entrada.nextLine(); // Limpar o buffer
+        }
+        return entrada.nextInt();
+    }
+
+    private int lerInteiro(Scanner entrada, int min, int max) {
+        int valor;
+        while (true) {
+            valor = lerInteiro(entrada);
+            if (valor >= min && valor <= max) {
+                break;
+            } else {
+                System.out.println("Por favor, digite um número entre " + min + " e " + max +".");
+            }
+        }
+        return valor;
+    }
+}
+
+CLASSE VIAGEM
+import java.util.ArrayList;
+import java.util.Random;
+
+public class Viagem {
+    private String id;
+    private Local local;
+    private Motorista motorista;
+    private int vagasDisponiveis;
+    private ArrayList<Passageiro> passageiros;
+    private static ArrayList<Viagem> todasViagens = new ArrayList<>();
+
+    private Viagem(Local local, Motorista motorista, int vagasDisponiveis) {
+        this.id = gerarIdAleatorio();
+        this.local = local;
+        this.motorista = motorista;
+        this.vagasDisponiveis = vagasDisponiveis;
+        this.passageiros = new ArrayList<>();
+        todasViagens.add(this); // Adiciona a viagem à lista de todas as viagens
+    }
+
+    private String gerarIdAleatorio() {
+        return "V-" + new Random().nextInt(10000);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public Local getLocal() {
+        return local;
+    }
+
+    public Motorista getMotorista() {
+        return motorista;
+    }
+
+    public int getVagasDisponiveis() {
+        return vagasDisponiveis;
+    }
+
+    public ArrayList<Passageiro> getPassageiros() {
+        return passageiros;
+    }
+
+    public boolean solicitarVaga(Passageiro passageiro) {
+        if (vagasDisponiveis > 0) {
+            passageiros.add(passageiro);
+            vagasDisponiveis--;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void liberarVaga(Passageiro passageiro) {
+        if (passageiros.remove(passageiro)) {
+            vagasDisponiveis++;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Viagem{" +
+                "id='" + id + '\'' +
+                ", local=" + local +
+                ", motorista=" + motorista.getNome() +
+                ", vagasDisponiveis=" + vagasDisponiveis +
+                '}';
+    }
+
+    public static Viagem criarViagem(Local local, Motorista motorista, int vagasDisponiveis) {
+        return new Viagem(local, motorista, vagasDisponiveis);
+    }
+
+    public static ArrayList<Viagem> getTodasViagens() {
+        return todasViagens;
+    }
+
+    public static ArrayList<Viagem> buscarViagensDisponiveis(String partidaDesejada, String destinoDesejado) {
+        ArrayList<Viagem> viagensDisponiveis = new ArrayList<>();
+        for (Viagem viagem : todasViagens) {
+            Local local = viagem.getLocal();
+            ArrayList<String> rota = local.getRota();
+            if (rota.contains(partidaDesejada) && rota.contains(destinoDesejado)) {
+                int indexPartida = rota.indexOf(partidaDesejada);
+                int indexDestino = rota.indexOf(destinoDesejado);
+                if (indexPartida < indexDestino && viagem.getVagasDisponiveis() > 0) {
+                    viagensDisponiveis.add(viagem);
+                }
+            }
+        }
+        return viagensDisponiveis;
+    }
+
+    public void notificarMotoristaSobreNovaParada(String partidaDesejada, String destinoDesejado, int subindo, int descendo) {
+        System.out.println("Notificação para o motorista: Próxima parada: " + partidaDesejada + ", vai subir " + subindo + " pessoa(s) e descer " + descendo + " pessoa(s).");
+    }
+
+    public void concluirViagem() {
+        System.out.println("Viagem " + id + " concluída.");
+        todasViagens.remove(this);
+    }
+}
+
+CALSSE LOCAL
+import java.util.ArrayList;
+
+public class Local {
+    private String origem;
+    private String destino;
+    private ArrayList<String> rota;
+
+    public Local(String origem, String destino, ArrayList<String> rota) {
+        this.origem = origem;
+        this.destino = destino;
+        this.rota = rota;
+    }
+
+    public String getOrigem() {
+        return origem;
+    }
+
+    public void setOrigem(String origem) {
+        this.origem = origem;
+    }
+
+    public String getDestino() {
+        return destino;
+    }
+
+    public void setDestino(String destino) {
+        this.destino = destino;
+    }
+
+    public ArrayList<String> getRota() {
+        return rota;
+    }
+
+    public void adicionarParada(String parada) {
+        rota.add(parada);
+    }
+
+    public void editarParada(int index, String novaParada) {
+        if (index >= 0 && index < rota.size()) {
+            rota.set(index, novaParada);
+        } else {
+            System.out.println("Índice inválido.");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Local{" +
+                "origem='" + origem + '\'' +
+                ", destino='" + destino + '\'' +
+                ", rota=" + rota +
+                '}';
+    }
+}
+
+CLASSE AVALIACAO
+import java.util.ArrayList;
+import java.util.List;
+
+public class Avaliacao {
+    private String viagem;
+    private String avaliador; // Nome do usuário que fez a avaliação
+    private int nota;
+    private String comentario;
+    private static List<Avaliacao> avaliacoes = new ArrayList<>();
+
+    public Avaliacao(String viagem, String avaliador, int nota, String comentario) {
+        this.viagem = viagem;
+        this.avaliador = avaliador;
+        this.nota = nota;
+        this.comentario = comentario;
+    }
+
+    // Métodos getters
+    public String getViagem() {
+        return viagem;
+    }
+
+    public String getAvaliador() {
+        return avaliador;
+    }
+
+    public int getNota() {
+        return nota;
+    }
+
+    public String getComentario() {
+        return comentario;
+    }
+
+    @Override
+    public String toString() {
+        return "Avaliacao{" +
+                "viagem='" + viagem + '\'' +
+                ", avaliador='" + avaliador + '\'' +
+                ", nota=" + nota +
+                ", comentario='" + comentario + '\'' +
+                '}';
+    }
+
+    // Método para criar uma nova avaliação
+    public static void criarAvaliacao(String viagem, String avaliador, int nota, String comentario) {
+        if (nota < 1 || nota > 5) {
+            System.out.println("A nota deve ser entre 1 e 5.");
+            return;
+        }
+        if (jaAvaliada(viagem, avaliador)) {
+            System.out.println("Você já avaliou esta viagem.");
+            return;
+        }
+        Avaliacao novaAvaliacao = new Avaliacao(viagem, avaliador, nota, comentario);
+        avaliacoes.add(novaAvaliacao);
+        System.out.println("Avaliação criada com sucesso!");
+    }
+
+    // Método para verificar se uma viagem já foi avaliada pelo passageiro
+    public static boolean jaAvaliada(String viagem, String avaliador) {
+        for (Avaliacao avaliacao : avaliacoes) {
+            if (avaliacao.getViagem().equals(viagem) && avaliacao.getAvaliador().equals(avaliador)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Método para visualizar todas as avaliações
+    public static void visualizarAvaliacoes() {
+        if (avaliacoes.isEmpty()) {
+            System.out.println("Nenhuma avaliação disponível.");
+        } else {
+            for (Avaliacao avaliacao : avaliacoes) {
+                System.out.println(avaliacao);
+            }
+        }
+    }
+
+    // Método para excluir uma avaliação por índice
+    public static void excluirAvaliacao(int index) {
+        if (index >= 0 && index < avaliacoes.size()) {
+            avaliacoes.remove(index);
+            System.out.println("Avaliação excluída com sucesso!");
+        } else {
+            System.out.println("Índice inválido. Nenhuma avaliação foi excluída.");
+        }
+    }
+
+    // Método para obter todas as avaliações
+    public static List<Avaliacao> getAvaliacoes() {
+        return avaliacoes;
+    }
+}
+
+CLASSE CADASTRO
+import java.util.Scanner;
+
+public class Cadastro {
+    public static void fazerCadastro(Scanner entrada) {
+        entrada.nextLine(); // Consumir nova linha pendente
+
+        System.out.print("Digite seu nome: ");
+        String nome = entrada.nextLine();
+
+        String email;
+        while (true) {
+            System.out.print("Digite seu email: ");
+            email = entrada.nextLine();
+            if (validarEmail(email)) {
+                break;
+            } else {
+                System.out.println("Email inválido. Tente novamente.");
+            }
+        }
+
+        String telefone;
+        while (true) {
+            System.out.print("Digite seu telefone (11 números): ");
+            telefone = entrada.nextLine();
+            if (validarTelefone(telefone)) {
+                break;
+            } else {
+                System.out.println("Telefone inválido. Tente novamente.");
+            }
+        }
+
+        System.out.print("Digite seu endereço: ");
+        String endereco = entrada.nextLine();
+
+        String senha;
+        while (true) {
+            System.out.print("Digite sua senha (mínimo 6 caracteres numéricos): ");
+            senha = entrada.nextLine();
+            if (validarSenha(senha)) {
+                break;
+            } else {
+                System.out.println("Senha inválida. Tente novamente.");
+            }
+        }
+
+        System.out.println("\n [ 1 ] MOTORISTA \n [ 2 ] PASSAGEIRO ");
+        System.out.print("Sua escolha: ");
+        int escolha = entrada.nextInt();
+
+        if (escolha == 1) {
+            Motorista novoMotorista = new Motorista(nome, email, telefone, endereco, senha);
+            Usuario.adicionarUsuario(novoMotorista);
+            System.out.println("Cadastro de motorista realizado com sucesso! Seu username é: " + novoMotorista.getUsername());
+        } else if (escolha == 2) {
+            Passageiro novoPassageiro = new Passageiro(nome, email, telefone, endereco, senha);
+            Usuario.adicionarUsuario(novoPassageiro);
+            System.out.println("Cadastro de passageiro realizado com sucesso! Seu username é: " + novoPassageiro.getUsername());
+        } else {
+            System.out.println("Escolha inválida. Tente novamente.");
+        }
+    }
+
+    public static boolean validarEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return false;
+        }
+        int atPosition = email.indexOf('@');
+        int dotPosition = email.lastIndexOf('.');
+        return atPosition > 0 && dotPosition > atPosition && dotPosition < email.length() - 1;
+    }
+
+    public static boolean validarTelefone(String telefone) {
+        if (telefone == null || telefone.length() != 11) {
+            return false;
+        }
+        for (char c : telefone.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean validarSenha(String senha) {
+        if (senha == null || senha.length() < 6) {
+            return false;
+        }
+        for (char c : senha.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+CLASSE LOGIN
+import java.util.Scanner;
+
+public class Login {
+    public static Usuario fazerLogin(Scanner entrada) {
+        entrada.nextLine(); 
+
+        System.out.print("Digite seu username: ");
+        String username = entrada.nextLine();
+
+        System.out.print("Digite sua senha: ");
+        String senha = entrada.nextLine();
+
+        for (Usuario usuario : Usuario.getUsuarios()) {
+            if (usuario.getUsername().equals(username) && usuario.getSenha().equals(senha)) {
+                return usuario;
+            }
+        }
+
+        System.out.println("Usuário ou senha incorretos. Tente novamente.");
+        return null;
+    }
+}
+
+CLASSE MAIN 
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner entrada = new Scanner(System.in);
+
+        /*O sistema cria usuários iniciais, para que já haja cadastros. */
+        ArrayList<Motorista> motoristas = criarMotoristasDeTeste();
+        criarViagensDeTeste(motoristas);
+        /*Loop while para inicio do sistema */
+        boolean sair = false;
+        while (!sair) {
+            /*Esse é o menu inicial, o qual faz mais sentido do que o de exemplo no Notion, 
+            senão não teria nexo a criação de um cadastro sem um login*/
+            System.out.println("\n**  CarONE-M  ** ");
+            System.out.println(" [ 1 ] LOGIN ");
+            System.out.println(" [ 2 ] CADASTRAR-SE");
+            System.out.println(" [ 3 ] Sair. ");
+
+            System.out.print(" Digite a sua opção: ");
+            int opcao = entrada.nextInt();
+            switch (opcao) {
+                case 1:
+                    Usuario usuarioLogado = Login.fazerLogin(entrada);
+                    if (usuarioLogado != null) {
+                        System.out.println("Login bem-sucedido para o usuário: " + usuarioLogado.getNome());
+                        if (usuarioLogado.isMotorista()) {
+                            Motorista motoristaLogado = (Motorista) usuarioLogado;
+                            motoristaLogado.menuMotorista(entrada);
+                        } else if (usuarioLogado.isPassageiro()) {
+                            Passageiro passageiroLogado = (Passageiro) usuarioLogado;
+                            passageiroLogado.menuPassageiro(entrada);
+                        } else {
+                            System.out.println("Usuário não reconhecido.");
+                        }
+                    } else {
+                        System.out.println("Falha ao fazer login. Verifique suas credenciais.");
+                    }
+                    break;
+                case 2:
+                    Cadastro.fazerCadastro(entrada);
+                    System.out.println("Cadastro realizado com sucesso! Por favor, faça login.");
+                    break;
+                case 3:
+                    System.out.println("\n Saindo...");
+                    sair = true;
+                    break;
+                default:
+                    System.out.println("Digite uma opção válida, de 1 a 3.");
+            }
+        }
+        entrada.close();
+    }
+    /*Métodos de criação de usuários e viagens pré cadastradas, facilita a apresentação e 
+    também ajuda no teste de funcionalidade do sistema. (getters)*/
+    public static ArrayList<Passageiro> criarPassageirosDeTeste() {
+        ArrayList<Passageiro> passageiros = new ArrayList<>();
+        passageiros.add(new Passageiro("Ana", "ana@example.com", "1122334455", "Rua C, 789", "senha789"));
+        passageiros.add(new Passageiro("Carlos", "carlos@example.com", "5566778899", "Rua D, 101", "senha101"));
+        passageiros.add(new Passageiro("Bia", "bia@example.com", "123456789", "Rua E, 202", "senha202"));
+        passageiros.add(new Passageiro("David", "david@example.com", "987654321", "Rua F, 303", "senha303"));
+        passageiros.add(new Passageiro("Eva", "eva@example.com", "456789123", "Rua G, 404", "senha404"));
+        passageiros.add(new Passageiro("Felipe", "felipe@example.com", "789123456", "Rua H, 505", "senha505"));
+
+        for (Passageiro passageiro : passageiros) {
+            Usuario.adicionarUsuario(passageiro);
+        }
+
+        return passageiros;
+    }
+
+    public static ArrayList<Motorista> criarMotoristasDeTeste() {
+        ArrayList<Motorista> motoristas = new ArrayList<>();
+        motoristas.add(new Motorista("João", "joao@example.com", "123456789", "Rua A, 123", "senha123"));
+        motoristas.add(new Motorista("Maria", "maria@example.com", "987654321", "Rua B, 456", "senha456"));
+
+        for (Motorista motorista : motoristas) {
+            Usuario.adicionarUsuario(motorista);
+        }
+
+        return motoristas;
+    }
+
+    public static void criarViagensDeTeste(ArrayList<Motorista> motoristas) {
+        Motorista motorista1 = motoristas.get(0);
+        Motorista motorista2 = motoristas.get(1);
+
+        ArrayList<String> rota1 = new ArrayList<>();
+        rota1.add("Rua A");
+        rota1.add("Rua B");
+        rota1.add("Rua C");
+        rota1.add("Rua D");
+        Viagem viagem1 = Viagem.criarViagem(new Local("Rua A", "Rua D", rota1), motorista1, 3);
+
+        ArrayList<String> rota2 = new ArrayList<>();
+        rota2.add("Avenida 1");
+        rota2.add("Avenida 2");
+        rota2.add("Avenida 3");
+        rota2.add("Avenida 4");
+        Viagem viagem2 = Viagem.criarViagem(new Local("Avenida 1", "Avenida 4", rota2), motorista1, 2);
+
+        ArrayList<String> rota3 = new ArrayList<>();
+        rota3.add("Rua P");
+        rota3.add("Rua Q");
+        rota3.add("Rua R");
+        rota3.add("Rua S");
+        Viagem viagem3 = Viagem.criarViagem(new Local("Rua P", "Rua S", rota3), motorista2, 4);
+
+        motorista1.getMinhasViagens().add(viagem1);
+        motorista1.getMinhasViagens().add(viagem2);
+        motorista2.getMinhasViagens().add(viagem3);
+
+        Passageiro.adicionarViagemDisponivel(viagem1);
+        Passageiro.adicionarViagemDisponivel(viagem2);
+        Passageiro.adicionarViagemDisponivel(viagem3);
+    }
+}
